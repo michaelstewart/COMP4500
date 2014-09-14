@@ -21,6 +21,14 @@ public class Dependencies {
         dependencies.put( var,  vars );
         return this;
     }
+    /** Get a dependency between a variable and a set of variables */
+    public DependSet get(String var) {
+    	DependSet dependSet = dependencies.get(var);
+    	if (dependSet == null) {
+    		dependSet = new DependSet();
+    	}
+    	return dependSet;
+    }
     /** Dependency equality requires that the dependencies are 
      * identical for all variables */
     public boolean equals( Dependencies other ) {
@@ -33,6 +41,21 @@ public class Dependencies {
             newCopy.dependencies.put( entry.getKey(), entry.getValue().copy() );
         }
         return newCopy;
+    }
+    public void replace(String var, DependSet vars) {
+    	DependSet depend = null;
+    	for (String v : vars.getDependencies()) {    		
+    		DependSet d = get(v);
+    		if (depend == null) {
+    			depend = d;
+    		} else {
+    			depend.merge(d);
+    		}
+    	}
+    	if (depend == null) {
+    		depend = new DependSet();
+    	}
+    	put(var, depend); 
     }
     public String toString() {
         String result = "{";
