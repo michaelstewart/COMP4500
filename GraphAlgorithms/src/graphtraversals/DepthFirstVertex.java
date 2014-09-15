@@ -18,6 +18,10 @@ public class DepthFirstVertex extends Vertex {
 		colour = Colour.White;
 		parent = null;
 	}
+	
+	public int number() {
+		return super.getIndex();
+	}
 		
 	public String toString() {
 		return super.toString() + " discovered " + discovery + 

@@ -1,5 +1,14 @@
 Parsing test06-repeat-x-y.simp
 Parsing complete
+Entry = vertex(0){ } Exit = vertex(1){ }
+  vertex(0){ } -> vertex(2){ } y := []; 
+  vertex(2){ } -> vertex(3){ } null; 
+  vertex(2){ } -> vertex(1){ } null; 
+  vertex(3){ } -> vertex(5){ } x := [y]; 
+  vertex(4){ } -> vertex(1){ } null; 
+  vertex(4){ } -> vertex(3){ } null; 
+  vertex(5){ } -> vertex(4){ } y := [z]; 
+
 { (x,[z]), (y,[z]), (z,[z]) }
 Analysis complete
 No errors detected.

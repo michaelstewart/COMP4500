@@ -4,8 +4,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 import dependencies.Primitive.NullStatement;
@@ -98,40 +100,89 @@ public class FlowGraph {
         
         entry.setDepends(entryDependencies);
 //        Map<ControlFlowNode,Dependencies> seen = new HashMap<ControlFlowNode,Dependencies>(); 
-        Map<ControlFlowNode,Integer> changedCountMap = new HashMap<ControlFlowNode,Integer>();  
-        visit(entry, changedCountMap);
+        Map<ControlFlowNode,Integer> changedCountMap = new HashMap<ControlFlowNode,Integer>();
+        Map<ControlFlowNode,Set<AdjacentEdge<ControlFlowNode, Primitive>>> inNodeMap = 
+        		new HashMap<ControlFlowNode,Set<AdjacentEdge<ControlFlowNode, Primitive>>>();
+        visit(entry, changedCountMap, 0, inNodeMap);
         return exit.getDepends();
     }
     
-    private void visit(ControlFlowNode u, Map<ControlFlowNode,Integer> changedCountMap, int changedCount) {
-    	System.out.println("Discovered: " + u);
-    	changedCountMap.put(u, changedCount);
+    private void visit(ControlFlowNode u, Map<ControlFlowNode,Integer> changedCountMap, int changedCount,
+    		Map<ControlFlowNode,Set<AdjacentEdge<ControlFlowNode, Primitive>>> inNodeMap) {
+//    	System.out.println("Discovered: " + u + " at a count of: " + changedCount);
+    	Integer oldChangedCount = changedCountMap.get(u);
+    	if (!(oldChangedCount != null && oldChangedCount > changedCount)) {
+    		// Update the changedCount but don't decrease it
+    		changedCountMap.put(u, changedCount);
+    	}
+    	    	
         for (AdjacentEdge<ControlFlowNode, Primitive> e : graph.adjacent(u)) {
         	ControlFlowNode v = e.target;
         	Primitive p = e.edgeInfo;
-   			Dependencies d = p.calculateDependencies(u.getDepends());
-   			if (d.equals(v.getDepends())) {
-   				// dependencies are unchanged
-   				
-   			} else {
-   				visit(v, changedCountMap, changedCount + 1);
+        	Dependencies oldDependencies = v.getDepends();
+   			Dependencies newDependencies = p.calculateDependencies(u.getDepends());
+   			if (highInDegree(inNodeMap, e, v)) {
+   				newDependencies.merge(oldDependencies);
    			}
    			
-   			v.setDepends(d);
+   			v.setDepends(newDependencies);
+   			int newChangedCount = changedCount;
+   			if (!newDependencies.equals(oldDependencies)) {
+   				// Dependencies have changed
+   				newChangedCount++;
+   			}
    			
-        	// Check if this node has been seen and its dependencies haven't changed
-        	// since the last time we saw it.
-        	if (!(seen.containsKey(v) && historyIsUnchanged(seen, v))) {	
-        		visit(v, );
-        	} else {
-        		System.out.println("NUP: " + u + " to " + v);
-        		System.out.println(dependencyHistory.get(v));
-        		System.out.println(v.getDepends());
-        	}
+   			// Check if nothing has changed since the last time we saw this node
+   			if (!(changedCountMap.containsKey(v) && changedCountMap.get(v).equals(newChangedCount))) {
+   				// Either we haven't seen the node or something has changed since last time we saw it
+   				visit(v, changedCountMap, newChangedCount, inNodeMap);
+   			}
         }
-        System.out.println("Finished: " + u);
+//        System.out.println("Finished: " + u);
     }
     
+    private boolean highInDegree(Map<ControlFlowNode,Set<AdjacentEdge<ControlFlowNode, Primitive>>> inNodeMap, AdjacentEdge<ControlFlowNode, Primitive> e, ControlFlowNode v) {
+    	Set<AdjacentEdge<ControlFlowNode, Primitive>> inEdgeSet = inNodeMap.get(v);
+    	if (inEdgeSet == null) {
+    		inEdgeSet = new HashSet<AdjacentEdge<ControlFlowNode, Primitive>>();
+    	}
+    	inEdgeSet.add(e);
+    	inNodeMap.put(v, inEdgeSet);
+    	if (inEdgeSet.size() > 1) {
+    		return true;
+    	}
+    	return false;    	
+    }
+
+    /*
+    public Dependencies calculateDependencies( 
+            Dependencies entryDependencies ) {
+        Dependencies exitDependencies = null;
+        
+        entry.setDepends(entryDependencies);
+//        Map<ControlFlowNode,Integer> changedCountMap = new HashMap<ControlFlowNode,Integer>();
+        
+        bfs(entry);
+        return exit.getDepends();
+    }
+    
+    public void bfs(ControlFlowNode u) {
+    	Queue<ControlFlowNode> Q = new LinkedList<ControlFlowNode>();
+    	Set<ControlFlowNode> V = new HashSet<ControlFlowNode>();
+    	V.add(u);
+    	Q.add(u);
+    	while (!Q.isEmpty()) {
+    		ControlFlowNode t = Q.remove();
+    		for (AdjacentEdge<ControlFlowNode, Primitive> e : graph.adjacent(t)) {
+    			ControlFlowNode v = e.target;
+    			Primitive p = e.edgeInfo;
+       			Dependencies newDependencies = p.calculateDependencies(u.getDepends());
+       			v.setDepends(newDependencies);
+    		}
+    	}
+    	
+    }
+    */
     
     public String toString() {
         String result = "Entry = " + entry + " Exit = " + exit + "\n";

@@ -35,17 +35,37 @@ public class Main {
 		G.addEdge( v4, v2, ob );
 		G.addEdge( v2, v6, ob );
 		G.addEdge( v6, v7, ob );
-		G.addEdge( v7, v8, ob );
-		G.addEdge( v8, v9, ob );
+		G.addEdge( v7, v0, ob );
+		G.addEdge( v0, v9, ob );
 		G.addEdge( v9, v2, ob );
 		G.addEdge( v2, v6, ob );
 		G.addEdge( v6, v5, ob );
 		G.addEdge( v5, v2, ob );
-
+		
 		df.DepthFirstSearch( G );
+		
+		G = transpose(G);
+		
+		df.DepthFirstSearchT( G );
+
+		
+//		for( DepthFirstVertex u : G ) {
+//			System.out.println( u );
+//		}
+	}
+	
+	private static Graph<DepthFirstVertex,Object> transpose(Graph<DepthFirstVertex,Object> G) {
+		Graph<DepthFirstVertex,Object> GT = 
+				new DGraphAdj<DepthFirstVertex,Object>();
 		for( DepthFirstVertex u : G ) {
-			System.out.println( u );
+			GT.addVertex(u);
 		}
+		for( DepthFirstVertex u : G ) {
+			for( AdjacentEdge<DepthFirstVertex,Object> e : G.adjacent(u) ) {				
+				GT.addEdge(e.target, u, e.edgeInfo);
+			}
+		}
+		return GT;
 	}
 	
 	public static void computeSni() {

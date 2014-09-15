@@ -1,5 +1,8 @@
 Parsing test01-assign-0.simp
 Parsing complete
+Entry = vertex(0){ } Exit = vertex(1){ }
+  vertex(0){ } -> vertex(1){ } x := []; 
+
 { }
 Analysis complete
 No errors detected.

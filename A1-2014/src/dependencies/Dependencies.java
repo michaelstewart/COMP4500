@@ -1,6 +1,8 @@
 package dependencies;
 
 //import java.io.PrintStream;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.SortedMap;
 
@@ -42,6 +44,9 @@ public class Dependencies {
         }
         return newCopy;
     }
+    public SortedMap<String,DependSet> getDependencies() {
+    	return dependencies;
+    }
     public void replace(String var, DependSet vars) {
     	DependSet depend = null;
     	for (String v : vars.getDependencies()) {    		
@@ -56,6 +61,18 @@ public class Dependencies {
     		depend = new DependSet();
     	}
     	put(var, depend); 
+    }
+    public void merge(Dependencies other) {
+    	Set<String> vars = new HashSet<String>();
+    	vars.addAll(dependencies.keySet());
+    	vars.addAll(other.getDependencies().keySet());
+    	
+    	for (String v : vars) {
+    		DependSet d = new DependSet();
+    		d.merge(get(v));
+    		d.merge(other.get(v));
+    		put(v, d);
+    	}
     }
     public String toString() {
         String result = "{";

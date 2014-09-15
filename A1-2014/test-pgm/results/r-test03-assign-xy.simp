@@ -1,5 +1,9 @@
 Parsing test03-assign-xy.simp
 Parsing complete
+Entry = vertex(0){ } Exit = vertex(1){ }
+  vertex(0){ } -> vertex(2){ } x := [y]; 
+  vertex(2){ } -> vertex(1){ } z := [x]; 
+
 { (x,[y]), (y,[y]), (z,[y]) }
 Analysis complete
 No errors detected.
