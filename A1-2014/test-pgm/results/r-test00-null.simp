@@ -1,8 +1,5 @@
 Parsing test00-null.simp
 Parsing complete
-Entry = vertex(0){ } Exit = vertex(1){ }
-  vertex(0){ } -> vertex(1){ } null; 
-
 { (y,[y]) }
 Analysis complete
 No errors detected.

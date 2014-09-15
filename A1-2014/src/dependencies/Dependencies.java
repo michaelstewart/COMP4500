@@ -44,9 +44,11 @@ public class Dependencies {
         }
         return newCopy;
     }
+    /** Returns the SortedMap of dependencies */
     public SortedMap<String,DependSet> getDependencies() {
     	return dependencies;
     }
+    /** Replaces the dependencies for var with those in vars */
     public void replace(String var, DependSet vars) {
     	DependSet depend = null;
     	for (String v : vars.getDependencies()) {    		
@@ -62,6 +64,7 @@ public class Dependencies {
     	}
     	put(var, depend); 
     }
+    /** Merges the dependencies from another Set in to this set */
     public void merge(Dependencies other) {
     	Set<String> vars = new HashSet<String>();
     	vars.addAll(dependencies.keySet());

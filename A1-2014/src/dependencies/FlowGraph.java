@@ -3,11 +3,8 @@ package dependencies;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 
 import dependencies.Primitive.NullStatement;
@@ -49,6 +46,15 @@ public class FlowGraph {
         graph.addEdge( entry, exit, statement);
     }
     
+    /**
+     * To construct the control flow graph for a compound statement,
+     * one needs to loop over all the statements and call buildGraph
+     * on them.
+     * 
+     * @param entry  vertex already in graph
+     * @param exit vertex already in graph
+     * @param compound compound statement to be expanded
+     */
     public void buildCompound(ControlFlowNode entry, ControlFlowNode exit, 
     		Compound compound) {
     	List<Statement> statements = compound.getStatements();
@@ -62,6 +68,14 @@ public class FlowGraph {
     	}    	
     }
     
+    /**
+     * To construct the select statement, one needs to call build graph on 
+     * each of the single statements inside to call buildGraph on them.
+     * 
+     * @param entry  vertex already in graph
+     * @param exit vertex already in graph
+     * @param select select statement to be expanded
+     */
     public void buildSelect(ControlFlowNode entry, ControlFlowNode exit, 
     		Select select) {
     	Set<Statement> statements = select.getStatements(); 	
@@ -72,6 +86,15 @@ public class FlowGraph {
     	}
     }
     
+    /**
+     * To construct the repeat statement, one needs to call add  enter_body
+     * and exit_body vertexes and connect them appropriately as well as
+     * calling buildGraph on inner statement of the repeat.
+     * 
+     * @param entry  vertex already in graph
+     * @param exit vertex already in graph
+     * @param repeat repeat statement to be expanded
+     */
     public void buildRepeat(ControlFlowNode entry, ControlFlowNode exit, 
     		Repeat repeat) {
     	// enter_body vertex
@@ -93,23 +116,36 @@ public class FlowGraph {
     
     /** Calculate the dependencies for this graph */
     public Dependencies calculateDependencies( 
-            Dependencies entryDependencies ) {
-        Dependencies exitDependencies = null;
-        //TODO complete calculation of dependencies and
-        //TODO return the dependencies at the exit vertex
+            Dependencies entryDependencies ) {       
         
         entry.setDepends(entryDependencies);
-//        Map<ControlFlowNode,Dependencies> seen = new HashMap<ControlFlowNode,Dependencies>(); 
+        
+        // A map used to store the number of updates that have occurred
+        // when we get to each node.
         Map<ControlFlowNode,Integer> changedCountMap = new HashMap<ControlFlowNode,Integer>();
+        
+        // A map used to store the edges that come in to a certain vertex
+        // inNodeMap maps Node -> Set of Edges
         Map<ControlFlowNode,Set<AdjacentEdge<ControlFlowNode, Primitive>>> inNodeMap = 
         		new HashMap<ControlFlowNode,Set<AdjacentEdge<ControlFlowNode, Primitive>>>();
+        
+        // Call visit on the entry vertex
         visit(entry, changedCountMap, 0, inNodeMap);
-        return exit.getDepends();
+        
+        Dependencies exitDependencies = exit.getDepends();
+        return exitDependencies;
     }
     
+    /**
+     * Visit recursively performs a depth first search from the passed in vertex.
+     * 
+     * @param u - the current node
+     * @param changedCountMap - maps Node -> count Integer
+     * @param changedCount - the number of dependency changes that have occurred so far
+     * @param inNodeMap - maps Node -> Set of Edges
+     */
     private void visit(ControlFlowNode u, Map<ControlFlowNode,Integer> changedCountMap, int changedCount,
     		Map<ControlFlowNode,Set<AdjacentEdge<ControlFlowNode, Primitive>>> inNodeMap) {
-//    	System.out.println("Discovered: " + u + " at a count of: " + changedCount);
     	Integer oldChangedCount = changedCountMap.get(u);
     	if (!(oldChangedCount != null && oldChangedCount > changedCount)) {
     		// Update the changedCount but don't decrease it
@@ -122,6 +158,7 @@ public class FlowGraph {
         	Dependencies oldDependencies = v.getDepends();
    			Dependencies newDependencies = p.calculateDependencies(u.getDepends());
    			if (highInDegree(inNodeMap, e, v)) {
+   				// If there are multiple vertices coming in to v
    				newDependencies.merge(oldDependencies);
    			}
    			
@@ -134,13 +171,22 @@ public class FlowGraph {
    			
    			// Check if nothing has changed since the last time we saw this node
    			if (!(changedCountMap.containsKey(v) && changedCountMap.get(v).equals(newChangedCount))) {
-   				// Either we haven't seen the node or something has changed since last time we saw it
+   				// Only call visit if we haven't seen the node 
+   				//  or something has changed since last time we saw it
    				visit(v, changedCountMap, newChangedCount, inNodeMap);
    			}
         }
-//        System.out.println("Finished: " + u);
     }
     
+    /**
+     * Returns true if inNodeMap contains edges other than e 
+     * incident to the vertex v.
+     * 
+     * @param inNodeMap
+     * @param e
+     * @param v
+     * @return true if v has multiple in bound edges
+     */
     private boolean highInDegree(Map<ControlFlowNode,Set<AdjacentEdge<ControlFlowNode, Primitive>>> inNodeMap, AdjacentEdge<ControlFlowNode, Primitive> e, ControlFlowNode v) {
     	Set<AdjacentEdge<ControlFlowNode, Primitive>> inEdgeSet = inNodeMap.get(v);
     	if (inEdgeSet == null) {
@@ -153,36 +199,6 @@ public class FlowGraph {
     	}
     	return false;    	
     }
-
-    /*
-    public Dependencies calculateDependencies( 
-            Dependencies entryDependencies ) {
-        Dependencies exitDependencies = null;
-        
-        entry.setDepends(entryDependencies);
-//        Map<ControlFlowNode,Integer> changedCountMap = new HashMap<ControlFlowNode,Integer>();
-        
-        bfs(entry);
-        return exit.getDepends();
-    }
-    
-    public void bfs(ControlFlowNode u) {
-    	Queue<ControlFlowNode> Q = new LinkedList<ControlFlowNode>();
-    	Set<ControlFlowNode> V = new HashSet<ControlFlowNode>();
-    	V.add(u);
-    	Q.add(u);
-    	while (!Q.isEmpty()) {
-    		ControlFlowNode t = Q.remove();
-    		for (AdjacentEdge<ControlFlowNode, Primitive> e : graph.adjacent(t)) {
-    			ControlFlowNode v = e.target;
-    			Primitive p = e.edgeInfo;
-       			Dependencies newDependencies = p.calculateDependencies(u.getDepends());
-       			v.setDepends(newDependencies);
-    		}
-    	}
-    	
-    }
-    */
     
     public String toString() {
         String result = "Entry = " + entry + " Exit = " + exit + "\n";

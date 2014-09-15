@@ -55,7 +55,6 @@ public abstract class Primitive extends Statement {
         
         @Override
         public Dependencies calculateDependencies( Dependencies in ) {            
-            //TODO compute out       	
         	Dependencies out = in.copy();
         	out.replace(variable, expression);
         	return out;

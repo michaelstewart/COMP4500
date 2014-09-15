@@ -1,9 +1,5 @@
 Parsing test04-sel-x-y.simp
 Parsing complete
-Entry = vertex(0){ } Exit = vertex(1){ }
-  vertex(0){ } -> vertex(1){ } t := [x]; 
-  vertex(0){ } -> vertex(1){ } t := [y]; 
-
 { (t,[x, y]), (x,[x]), (y,[y]) }
 Analysis complete
 No errors detected.

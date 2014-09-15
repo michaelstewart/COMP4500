@@ -1,8 +1,5 @@
 Parsing test02-assign-y.simp
 Parsing complete
-Entry = vertex(0){ } Exit = vertex(1){ }
-  vertex(0){ } -> vertex(1){ } y := [x]; 
-
 { (x,[x]), (y,[x]) }
 Analysis complete
 No errors detected.

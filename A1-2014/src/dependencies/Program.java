@@ -27,7 +27,7 @@ public class Program {
     public void buildProgram() {
 //        System.out.println( body.toString() );
         flowGraph = new FlowGraph( body );
-        System.out.println( flowGraph );
+//        System.out.println( flowGraph );
     }
     
     public Dependencies analyse() {
